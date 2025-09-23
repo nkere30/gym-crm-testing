@@ -1,0 +1,13 @@
+spring:
+  activemq:
+    broker-url: vm://embedded?broker.persistent=false
+  data:
+    mongodb:
+      database: testdb
+  cloud:
+    discovery:
+      enabled: false
+
+eureka:
+  client:
+    enabled: false

@@ -2,3 +2,20 @@ spring:
   data:
     mongodb:
       database: testdb
+  jpa:
+    hibernate:
+      ddl-auto: update
+  datasource:
+    url: jdbc:h2:mem:crmtest;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  activemq:
+    broker-url: vm://embedded?broker.persistent=false
+  cloud:
+    discovery:
+      enabled: false
+
+eureka:
+  client:
+    enabled: false

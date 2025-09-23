@@ -1,0 +1,65 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: workload-service
+
+  datasource:
+    url: jdbc:h2:mem:workloaddb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+    open-in-view: false
+
+  h2:
+    console:
+      enabled: true
+      path: /h2
+
+  jms:
+    pub-sub-domain: false
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka
+  instance:
+    prefer-ip-address: true
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    persist-authorization: true
+
+logging:
+  pattern:
+    level: "%5p [transactionId=%X{transactionId}]"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,mappings,beans
+  endpoint:
+    health:
+      show-details: always
+
+jwt:
+  secret: "6b6LZpM24yEnN0uYFi1tBpKoYkeP3vM8"
+
+
+app:
+  messaging:
+    training:
+      queue: ${TRAINING_QUEUE:training.events}
+      dlq: ${TRAINING_DLQ:training.events.dlq}
+      max-redeliveries: ${TRAINING_MAX_REDELIVERIES:3}

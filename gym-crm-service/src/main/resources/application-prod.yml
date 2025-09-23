@@ -1,0 +1,22 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/gymcrm_prod
+    username: postgres
+    password: password
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  activemq:
+    broker-url: tcp://localhost:61616
+  jms:
+    pub-sub-domain: false
+    listener:
+      min-concurrency: 4
+      max-concurrency: 20
+
+app:
+  messaging:
+    training:
+      queue: training.events
+      dlq: training.events.dlq
+      max-redeliveries: 3

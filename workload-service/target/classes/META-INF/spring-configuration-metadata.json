@@ -10,14 +10,12 @@
     {
       "name": "app.messaging.training.dlq",
       "type": "java.lang.String",
-      "sourceType": "com.gymcrm.workload.config.TrainingMessagingProps",
-      "defaultValue": "training.events.dlq"
+      "sourceType": "com.gymcrm.workload.config.TrainingMessagingProps"
     },
     {
       "name": "app.messaging.training.max-redeliveries",
       "type": "java.lang.Integer",
-      "sourceType": "com.gymcrm.workload.config.TrainingMessagingProps",
-      "defaultValue": 3
+      "sourceType": "com.gymcrm.workload.config.TrainingMessagingProps"
     },
     {
       "name": "app.messaging.training.queue",

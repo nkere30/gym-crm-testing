@@ -1,3 +1,4 @@
+@component
 Feature: Dummy test
   Scenario: Run empty cucumber
     Given nothing

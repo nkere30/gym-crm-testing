@@ -11,3 +11,8 @@ spring:
 eureka:
   client:
     enabled: false
+app:
+  messaging:
+    training:
+      queue: training.events
+      dlq: training.events.dlq

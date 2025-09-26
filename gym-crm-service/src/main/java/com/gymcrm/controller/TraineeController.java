@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -38,7 +39,7 @@ public class TraineeController {
             @ApiResponse(responseCode = "400", description = "Invalid input")
     })
     @PostMapping
-    public ResponseEntity<TraineeRegistrationResponse> registerTrainee(@RequestBody TraineeRegistrationRequest request) {
+    public ResponseEntity<TraineeRegistrationResponse> registerTrainee(@Valid @RequestBody TraineeRegistrationRequest request) {
         String tx = UUID.randomUUID().toString();
         log.info("[{}] Registering trainee: {}", tx, request.getFirstName());
 

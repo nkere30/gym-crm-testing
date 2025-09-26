@@ -1,6 +1,7 @@
 package com.gymcrm.controller;
 
 import com.gymcrm.dto.training.TrainingCreateRequest;
+import com.gymcrm.dto.training.TrainingResponse;
 import com.gymcrm.dto.training.TrainingTypeResponse;
 import com.gymcrm.facade.TrainingFacade;
 import io.swagger.v3.oas.annotations.Operation;
@@ -9,6 +10,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,21 +28,30 @@ public class TrainingController {
 
     @Operation(summary = "Add new training session", security = @SecurityRequirement(name = "bearerAuth"))
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Training created"),
+            @ApiResponse(responseCode = "201", description = "Training created"),
             @ApiResponse(responseCode = "401", description = "Authentication failed"),
             @ApiResponse(responseCode = "400", description = "Invalid input")
     })
     @PostMapping
-    public ResponseEntity<Void> addTraining(@RequestBody TrainingCreateRequest request,
-                                            Principal principal) {
+    public ResponseEntity<TrainingResponse> addTraining(@RequestBody TrainingCreateRequest request,
+                                                        Principal principal) {
         String tx = UUID.randomUUID().toString();
         log.info("[{}] Creating training session for trainee: {}", tx, principal.getName());
 
         trainingFacade.createTraining(principal.getName(), request);
 
+        TrainingResponse response = new TrainingResponse(
+                principal.getName(),
+                request.getTrainerUsername(),
+                request.getTrainingName(),
+                request.getTrainingDate(),
+                request.getTrainingDuration()
+        );
+
         log.info("[{}] Training session created successfully for trainee: {}", tx, principal.getName());
-        return ResponseEntity.ok().build();
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
+
 
     @Operation(summary = "Cancel a training session", security = @SecurityRequirement(name = "bearerAuth"))
     @ApiResponses({

@@ -12,7 +12,12 @@ import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import org.mockito.Mockito;
 import org.springframework.http.ResponseEntity;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
+import org.slf4j.LoggerFactory;
 
+import java.util.List;
 import java.security.Principal;
 import java.time.LocalDate;
 import java.util.Map;
@@ -31,6 +36,9 @@ public class TrainingComponentSteps {
     private ResponseEntity<TrainingResponse> creationResponse;
     private ResponseEntity<Void> deletionResponse;
     private Exception caughtException;
+
+    // to capture logs
+    private ListAppender<ILoggingEvent> listAppender;
 
     // GIVEN
     @Given("a training creation request:")
@@ -62,6 +70,7 @@ public class TrainingComponentSteps {
         Mockito.doThrow(new IllegalArgumentException("Training not found"))
                 .when(trainingFacade).deleteTraining(trainingId.longValue());
     }
+
     // WHEN
     @When("I create the training")
     public void i_create_the_training() {
@@ -81,6 +90,9 @@ public class TrainingComponentSteps {
                     trainingCreateRequest.getTrainingDuration() <= 0) {
                 throw new IllegalArgumentException("Training duration must be positive");
             }
+
+            // Attach log appender BEFORE controller is called
+            attachLogAppender();
 
             TrainingResponse mockResponse = new TrainingResponse(
                     1L,
@@ -102,11 +114,11 @@ public class TrainingComponentSteps {
         }
     }
 
-
-
     @When("I delete the training with id {int}")
     public void i_delete_the_training_with_id(Integer trainingId) {
         try {
+            // Attach log appender BEFORE controller is called
+            attachLogAppender();
             deletionResponse = trainingController.deleteTraining(trainingId.longValue());
         } catch (Exception e) {
             caughtException = e;
@@ -157,5 +169,28 @@ public class TrainingComponentSteps {
         } else {
             assertEquals(expectedStatus.intValue(), deletionResponse.getStatusCode().value());
         }
+    }
+
+    @Then("the logs should contain a transactionId")
+    public void the_logs_should_contain_a_transaction_id() {
+        Logger controllerLogger = (Logger) LoggerFactory.getLogger("com.gymcrm.controller.TrainingController");
+        if (listAppender == null) {
+            listAppender = new ListAppender<>();
+            listAppender.start();
+            controllerLogger.addAppender(listAppender);
+        }
+
+        List<ILoggingEvent> logsList = listAppender.list;
+        boolean containsTx = logsList.stream()
+                .anyMatch(event -> event.getFormattedMessage()
+                        .matches(".*\\[[0-9a-f\\-]{36}].*"));
+        assertTrue(containsTx, "Expected logs to contain a transactionId in UUID format");
+    }
+
+    private void attachLogAppender() {
+        Logger controllerLogger = (Logger) LoggerFactory.getLogger("com.gymcrm.controller.TrainingController");
+        listAppender = new ListAppender<>();
+        listAppender.start();
+        controllerLogger.addAppender(listAppender);
     }
 }

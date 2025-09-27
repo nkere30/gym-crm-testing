@@ -69,3 +69,20 @@ Feature: Training Component Tests
       | trainingDuration | 0            |
     When I create the training
     Then the training creation response status should be 400
+
+  @edgecase @nfr
+  Scenario: TransactionId should be included in training operations
+    Given a training creation request:
+      | traineeUsername  | nina.grayson |
+      | trainerUsername  | nick.grayson |
+      | trainingName     | Boxing Special |
+      | trainingDate     | 2025-09-05   |
+      | trainingDuration | 60           |
+    When I create the training
+    Then the logs should contain a transactionId
+
+  @edgecase @nfr
+  Scenario: TransactionId should be included when deleting training
+    Given an existing training with id 1
+    When I delete the training with id 1
+    Then the logs should contain a transactionId

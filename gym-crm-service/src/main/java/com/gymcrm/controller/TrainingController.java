@@ -38,17 +38,9 @@ public class TrainingController {
         String tx = UUID.randomUUID().toString();
         log.info("[{}] Creating training session for trainee: {}", tx, principal.getName());
 
-        trainingFacade.createTraining(principal.getName(), request);
+        TrainingResponse response = trainingFacade.createTraining(principal.getName(), request);
 
-        TrainingResponse response = new TrainingResponse(
-                principal.getName(),
-                request.getTrainerUsername(),
-                request.getTrainingName(),
-                request.getTrainingDate(),
-                request.getTrainingDuration()
-        );
-
-        log.info("[{}] Training session created successfully for trainee: {}", tx, principal.getName());
+        log.info("[{}] Training session created successfully with id {}", tx, response.getId());
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 

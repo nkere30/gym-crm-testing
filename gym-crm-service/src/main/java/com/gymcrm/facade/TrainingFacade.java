@@ -1,6 +1,7 @@
 package com.gymcrm.facade;
 
 import com.gymcrm.dto.training.TrainingCreateRequest;
+import com.gymcrm.dto.training.TrainingResponse;
 import com.gymcrm.model.Trainee;
 import com.gymcrm.model.Trainer;
 import com.gymcrm.model.Training;
@@ -35,7 +36,7 @@ public class TrainingFacade {
         this.trainerService = trainerService;
     }
 
-    public void createTraining(String traineeUsername, TrainingCreateRequest request) {
+    public TrainingResponse createTraining(String traineeUsername, TrainingCreateRequest request) {
         log.info("Creating training '{}' for trainee '{}'", request.getTrainingName(), traineeUsername);
 
         Trainee trainee = traineeService.findByUsername(traineeUsername);
@@ -59,9 +60,19 @@ public class TrainingFacade {
 
         validateTrainingFields(training);
 
-        trainingService.create(training);
-        log.info("Training '{}' successfully created", request.getTrainingName());
+        Training saved = trainingService.create(training);
+
+        return new TrainingResponse(
+                saved.getId(),
+                saved.getTrainee().getUsername(),
+                saved.getTrainer().getUsername(),
+                saved.getTrainingName(),
+                saved.getTrainingDate(),
+                saved.getTrainingDuration()
+        );
     }
+
+
 
     public void deleteTraining(Long trainingId) {
         log.info("Cancelling training with id {}", trainingId);

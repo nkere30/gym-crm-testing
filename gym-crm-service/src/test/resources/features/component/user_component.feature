@@ -90,3 +90,18 @@ Feature: User Component Tests
       | user    |
       | trainee |
       | trainer |
+  @negative @auth @nfr
+  Scenario Outline: Fail to register a new <user> without JWT
+    Given a <user> registration request:
+      | firstName      | John        |
+      | lastName       | Doe         |
+      | specialization | Boxing      |
+      | dateOfBirth    | 2000-01-01  |
+      | address        | 123 Main St |
+    When I try to register the <user> without authentication
+    Then the registration response status should be 401
+
+    Examples:
+      | user    |
+      | trainee |
+      | trainer |

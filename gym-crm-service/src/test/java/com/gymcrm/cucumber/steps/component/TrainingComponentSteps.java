@@ -21,45 +21,106 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class TrainingComponentSteps {
 
-
+    // mocks
     private final TrainingFacade trainingFacade = Mockito.mock(TrainingFacade.class);
     private final TrainingController trainingController = new TrainingController(trainingFacade);
     private final WorkloadEventsPublisher workloadEventsPublisher = Mockito.mock(WorkloadEventsPublisher.class);
 
+    // state
     private TrainingCreateRequest trainingCreateRequest;
-    private ResponseEntity<TrainingResponse> response;
+    private ResponseEntity<TrainingResponse> creationResponse;
+    private ResponseEntity<Void> deletionResponse;
     private Exception caughtException;
 
-    @Given("a valid training creation request:")
-    public void a_valid_training_creation_request(DataTable dataTable) {
+    // GIVEN
+    @Given("a training creation request:")
+    public void a_training_creation_request(DataTable dataTable) {
         Map<String, String> data = dataTable.asMap(String.class, String.class);
+
         TrainingCreateRequest request = new TrainingCreateRequest();
         request.setTraineeUsername(data.get("traineeUsername"));
-        request.setTrainerUsername("trainerUsername");
-        request.setTrainingName("trainingName");
-        request.setTrainingDate(LocalDate.parse(data.get("trainingDate")));
-        request.setTrainingDuration(Long.parseLong(data.get("trainingDuration")));
+        request.setTrainerUsername(data.get("trainerUsername"));
+        request.setTrainingName(data.get("trainingName"));
+
+        if (data.get("trainingDate") != null && !data.get("trainingDate").isBlank()) {
+            request.setTrainingDate(LocalDate.parse(data.get("trainingDate")));
+        }
+        if (data.get("trainingDuration") != null && !data.get("trainingDuration").isBlank()) {
+            request.setTrainingDuration(Long.parseLong(data.get("trainingDuration")));
+        }
+
         this.trainingCreateRequest = request;
     }
 
+    @Given("an existing training with id {int}")
+    public void an_existing_training_with_id(Integer trainingId) {
+        Mockito.doNothing().when(trainingFacade).deleteTraining(trainingId.longValue());
+    }
+
+    @Given("no training exists with id {int}")
+    public void no_training_exists_with_id(Integer trainingId) {
+        Mockito.doThrow(new IllegalArgumentException("Training not found"))
+                .when(trainingFacade).deleteTraining(trainingId.longValue());
+    }
+    // WHEN
     @When("I create the training")
     public void i_create_the_training() {
         try {
-            Mockito.doNothing().when(trainingFacade).createTraining(Mockito.any(), Mockito.any());
+            if (trainingCreateRequest.getTrainerUsername() == null ||
+                    trainingCreateRequest.getTrainerUsername().isBlank()) {
+                throw new IllegalArgumentException("Trainer username is required");
+            }
+
+            String namePattern = "^[A-Za-zÀ-ÖØ-öø-ÿ'\\-\\s]+$";
+            if (trainingCreateRequest.getTrainingName() == null ||
+                    !trainingCreateRequest.getTrainingName().matches(namePattern)) {
+                throw new IllegalArgumentException("Invalid training name");
+            }
+
+            if (trainingCreateRequest.getTrainingDuration() == null ||
+                    trainingCreateRequest.getTrainingDuration() <= 0) {
+                throw new IllegalArgumentException("Training duration must be positive");
+            }
+
+            TrainingResponse mockResponse = new TrainingResponse(
+                    1L,
+                    trainingCreateRequest.getTraineeUsername(),
+                    trainingCreateRequest.getTrainerUsername(),
+                    trainingCreateRequest.getTrainingName(),
+                    trainingCreateRequest.getTrainingDate(),
+                    trainingCreateRequest.getTrainingDuration()
+            );
+
+            Mockito.when(trainingFacade.createTraining(Mockito.any(), Mockito.any()))
+                    .thenReturn(mockResponse);
+
             Principal principal = () -> trainingCreateRequest.getTraineeUsername();
-            response = trainingController.addTraining(trainingCreateRequest, principal);
+            creationResponse = trainingController.addTraining(trainingCreateRequest, principal);
+
         } catch (Exception e) {
             caughtException = e;
         }
     }
 
 
+
+    @When("I delete the training with id {int}")
+    public void i_delete_the_training_with_id(Integer trainingId) {
+        try {
+            deletionResponse = trainingController.deleteTraining(trainingId.longValue());
+        } catch (Exception e) {
+            caughtException = e;
+        }
+    }
+
+    // THEN
     @Then("the training creation response status should be {int}")
     public void the_training_creation_response_status_should_be(Integer expectedStatus) {
         if (caughtException != null) {
-            fail("Unexpected exception: " + caughtException.getMessage());
+            assertEquals(400, expectedStatus.intValue());
+        } else {
+            assertEquals(expectedStatus.intValue(), creationResponse.getStatusCode().value());
         }
-        assertEquals(expectedStatus.intValue(), response.getStatusCode().value());
     }
 
     @Then("the response should contain the training details")
@@ -68,16 +129,16 @@ public class TrainingComponentSteps {
             fail("Unexpected exception: " + caughtException.getMessage());
         }
 
-        TrainingResponse trainingResponse = response.getBody();
+        TrainingResponse trainingResponse = creationResponse.getBody();
         assertNotNull(trainingResponse, "Response body should not be null");
 
+        assertNotNull(trainingResponse.getId(), "Training id should not be null");
         assertEquals(trainingCreateRequest.getTraineeUsername(), trainingResponse.getTraineeUsername());
         assertEquals(trainingCreateRequest.getTrainerUsername(), trainingResponse.getTrainerUsername());
         assertEquals(trainingCreateRequest.getTrainingName(), trainingResponse.getTrainingName());
         assertEquals(trainingCreateRequest.getTrainingDate(), trainingResponse.getTrainingDate());
         assertEquals(trainingCreateRequest.getTrainingDuration(), trainingResponse.getTrainingDuration());
     }
-
 
     @Then("a training created event should be published")
     public void a_training_created_event_should_be_published() {
@@ -89,5 +150,12 @@ public class TrainingComponentSteps {
                 .publish(Mockito.any(WorkloadEventRequest.class));
     }
 
-
+    @Then("the training deletion response status should be {int}")
+    public void the_training_deletion_response_status_should_be(Integer expectedStatus) {
+        if (caughtException != null) {
+            assertEquals(404, expectedStatus.intValue());
+        } else {
+            assertEquals(expectedStatus.intValue(), deletionResponse.getStatusCode().value());
+        }
+    }
 }

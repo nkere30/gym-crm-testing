@@ -7,6 +7,7 @@ import java.time.LocalDate;
 @Data
 @AllArgsConstructor
 public class TrainingResponse {
+    private Long id;
     private String traineeUsername;
     private String trainerUsername;
     private String trainingName;

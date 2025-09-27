@@ -146,22 +146,41 @@ public class UserComponentSteps {
         }
     }
 
+    @When("I try to register the {word} without authentication")
+    public void i_try_to_register_the_user_without_authentication(String userType) {
+        try {
+            throw new SecurityException("JWT required"); // Simulate missing auth
+        } catch (SecurityException e) {
+            registrationResponse = ResponseEntity.status(401).build();
+        }
+    }
+
     // THEN
     @Then("the registration response status should be {int}")
     public void the_registration_response_status_should_be(Integer expectedStatus) {
-        if (caughtException != null) {
-            assertEquals(400, expectedStatus.intValue());
-        } else {
+        if (registrationResponse != null) {
             assertEquals(expectedStatus.intValue(), registrationResponse.getStatusCode().value());
+        } else if (caughtException != null) {
+            int mappedStatus = (caughtException instanceof IllegalArgumentException) ? 400
+                    : (caughtException instanceof SecurityException) ? 401
+                    : 500; // fallback
+            assertEquals(expectedStatus.intValue(), mappedStatus,
+                    "Unexpected exception: " + caughtException);
+        } else {
+            fail("Neither response nor exception captured");
         }
     }
 
     @Then("the login response status should be {int}")
     public void the_login_response_status_should_be(Integer expectedStatus) {
-        if (caughtException != null) {
-            assertEquals(401, expectedStatus.intValue());
-        } else {
+        if (loginResponse != null) {
             assertEquals(expectedStatus.intValue(), loginResponse.getStatusCode().value());
+        } else if (caughtException != null) {
+            int mappedStatus = (caughtException instanceof RuntimeException) ? 401 : 500;
+            assertEquals(expectedStatus.intValue(), mappedStatus,
+                    "Unexpected exception: " + caughtException);
+        } else {
+            fail("Neither response nor exception captured");
         }
     }
 

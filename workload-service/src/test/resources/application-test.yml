@@ -7,10 +7,14 @@ spring:
   cloud:
     discovery:
       enabled: false
+  jms:
+    listener:
+      auto-startup: false
 
 eureka:
   client:
     enabled: false
+
 app:
   messaging:
     training:

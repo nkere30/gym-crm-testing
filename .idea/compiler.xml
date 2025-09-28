@@ -7,6 +7,7 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
+        <module name="integration-tests" />
         <module name="discovery-server" />
       </profile>
       <profile name="Annotation profile for gym-crm-ms" enabled="true">

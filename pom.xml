@@ -13,6 +13,7 @@
     <module>discovery-server</module>
     <module>gym-crm-service</module>
     <module>workload-service</module>
+      <module>integration-tests</module>
   </modules>
 
   <dependencyManagement>

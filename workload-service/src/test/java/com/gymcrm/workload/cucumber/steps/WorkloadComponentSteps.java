@@ -34,53 +34,41 @@ public class WorkloadComponentSteps {
     private Integer expectedMonth;
     private Integer expectedTotalMinutes;
     private WorkloadActionType expectedActionType;
-
-    private boolean negativeCase;
+    private Integer expectedYear;
 
     @Given("a workload event with:")
     public void a_workload_event_with(DataTable dataTable) {
         Map<String, String> map = dataTable.asMap(String.class, String.class);
-
         try {
-            String username = map.get("trainerUsername");
-            String durationStr = map.get("trainingDuration");
-            String actionStr = map.get("actionType");
-
-            if (username == null || username.isBlank()) {
-                negativeCase = true;
-                return;
-            }
-
-            long duration = Long.parseLong(durationStr);
-            if (duration <= 0) {
-                negativeCase = true;
-                return;
-            }
-
             eventRequest = new WorkloadEventRequest();
-            eventRequest.setTrainerUsername(username);
+            eventRequest.setTrainerUsername(map.get("trainerUsername"));
             eventRequest.setTrainerFirstName(map.getOrDefault("trainerFirstName", map.get("firstName")));
             eventRequest.setTrainerLastName(map.getOrDefault("trainerLastName", map.get("lastName")));
             eventRequest.setIsActive(Boolean.valueOf(map.get("isActive")));
             eventRequest.setTrainingDate(LocalDate.parse(map.get("trainingDate")));
-            eventRequest.setTrainingDuration(duration);
-
-            eventRequest.setActionType(WorkloadActionType.valueOf(actionStr));
-            expectedActionType = WorkloadActionType.valueOf(actionStr);
-
+            eventRequest.setTrainingDuration(Long.valueOf(map.get("trainingDuration")));
+            eventRequest.setActionType(WorkloadActionType.valueOf(map.get("actionType")));
+            expectedActionType = eventRequest.getActionType();
         } catch (Exception e) {
-            negativeCase = true;
+            caught = e;
         }
     }
 
     @When("I send the workload event")
     public void i_send_the_workload_event() {
         try {
-            if (negativeCase) {
-                caught = new IllegalArgumentException("Invalid workload event");
-                return;
+            if (eventRequest.getTrainerUsername() == null || eventRequest.getTrainerUsername().isBlank()) {
+                throw new IllegalArgumentException("Trainer username is required");
             }
+            if (eventRequest.getTrainingDuration() == null || eventRequest.getTrainingDuration() <= 0) {
+                throw new IllegalArgumentException("Training duration must be positive");
+            }
+            if (eventRequest.getActionType() == null) {
+                throw new IllegalArgumentException("Action type is required");
+            }
+
             postResponse = controller.recordEvent(eventRequest);
+
         } catch (Exception e) {
             caught = e;
         }
@@ -88,11 +76,10 @@ public class WorkloadComponentSteps {
 
     @Then("the response status should be {int}")
     public void the_response_status_should_be(Integer expectedStatus) {
-        if (negativeCase || caught != null) {
-            assertEquals(400, expectedStatus.intValue());
+        if (caught != null) {
+            assertEquals(400, expectedStatus.intValue(), "Expected validation failure to map to 400");
             return;
         }
-
         assertNotNull(postResponse);
         assertEquals(expectedStatus.intValue(), postResponse.getStatusCode().value());
 
@@ -105,27 +92,25 @@ public class WorkloadComponentSteps {
 
     @Then("the response should contain workload summary:")
     public void the_response_should_contain_workload_summary(DataTable dataTable) {
-        if (negativeCase) return;
-
         Map<String, String> m = dataTable.asMap(String.class, String.class);
         expectedUsername = m.get("trainerUsername");
         expectedFirstName = m.getOrDefault("trainerFirstName", m.get("firstName"));
-        expectedLastName  = m.getOrDefault("trainerLastName",  m.get("lastName"));
-        expectedActive    = m.containsKey("isActive") ? Boolean.valueOf(m.get("isActive")) : null;
+        expectedLastName = m.getOrDefault("trainerLastName", m.get("lastName"));
+        expectedActive = m.containsKey("isActive") ? Boolean.valueOf(m.get("isActive")) : null;
+
+        assertNotNull(expectedUsername, "Trainer username must be provided in summary");
+        assertNotNull(expectedFirstName, "Trainer first name must be provided in summary");
+        assertNotNull(expectedLastName, "Trainer last name must be provided in summary");
     }
 
     @Then("the yearly summary should include:")
     public void the_yearly_summary_should_include(DataTable dataTable) {
-        if (negativeCase) return;
         Map<String, String> m = dataTable.asMap(String.class, String.class);
-        Integer expectedYear = Integer.valueOf(m.get("year"));
-        assertNotNull(expectedYear);
+        expectedYear = Integer.valueOf(m.get("year"));
     }
 
     @Then("the monthly summary for year {int} should include:")
     public void the_monthly_summary_for_year_should_include(Integer year, DataTable dataTable) {
-        if (negativeCase) return;
-
         Map<String, String> m = dataTable.asMap(String.class, String.class);
         expectedMonth = Integer.valueOf(m.get("month"));
         expectedTotalMinutes = Integer.valueOf(m.get("totalMinutes"));
@@ -154,7 +139,9 @@ public class WorkloadComponentSteps {
         assertEquals(expectedLastName, resp.getTrainerLastName());
         if (expectedActive != null) assertEquals(expectedActive, resp.getIsActive());
 
+        // Verify year and month exist
         YearSummary yr = resp.getYears().stream().filter(y -> y.getYear() == year).findFirst().orElseThrow();
+        assertEquals(expectedYear, yr.getYear(), "Expected year should match");
         assertTrue(yr.getMonths().stream().anyMatch(mm ->
                 mm.getMonth() == expectedMonth && mm.getTotalMinutes() == expectedTotalMinutes));
     }

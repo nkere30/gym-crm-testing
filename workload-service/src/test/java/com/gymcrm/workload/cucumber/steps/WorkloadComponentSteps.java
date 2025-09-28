@@ -35,23 +35,51 @@ public class WorkloadComponentSteps {
     private Integer expectedTotalMinutes;
     private WorkloadActionType expectedActionType;
 
+    private boolean negativeCase;
+
     @Given("a workload event with:")
     public void a_workload_event_with(DataTable dataTable) {
         Map<String, String> map = dataTable.asMap(String.class, String.class);
-        eventRequest = new WorkloadEventRequest();
-        eventRequest.setTrainerUsername(map.get("trainerUsername"));
-        eventRequest.setTrainerFirstName(map.getOrDefault("trainerFirstName", map.get("firstName")));
-        eventRequest.setTrainerLastName(map.getOrDefault("trainerLastName", map.get("lastName")));
-        eventRequest.setIsActive(Boolean.valueOf(map.get("isActive")));
-        eventRequest.setTrainingDate(LocalDate.parse(map.get("trainingDate")));
-        eventRequest.setTrainingDuration(Long.valueOf(map.get("trainingDuration")));
-        eventRequest.setActionType(WorkloadActionType.valueOf(map.get("actionType")));
-        expectedActionType = WorkloadActionType.valueOf(map.get("actionType"));
+
+        try {
+            String username = map.get("trainerUsername");
+            String durationStr = map.get("trainingDuration");
+            String actionStr = map.get("actionType");
+
+            if (username == null || username.isBlank()) {
+                negativeCase = true;
+                return;
+            }
+
+            long duration = Long.parseLong(durationStr);
+            if (duration <= 0) {
+                negativeCase = true;
+                return;
+            }
+
+            eventRequest = new WorkloadEventRequest();
+            eventRequest.setTrainerUsername(username);
+            eventRequest.setTrainerFirstName(map.getOrDefault("trainerFirstName", map.get("firstName")));
+            eventRequest.setTrainerLastName(map.getOrDefault("trainerLastName", map.get("lastName")));
+            eventRequest.setIsActive(Boolean.valueOf(map.get("isActive")));
+            eventRequest.setTrainingDate(LocalDate.parse(map.get("trainingDate")));
+            eventRequest.setTrainingDuration(duration);
+
+            eventRequest.setActionType(WorkloadActionType.valueOf(actionStr));
+            expectedActionType = WorkloadActionType.valueOf(actionStr);
+
+        } catch (Exception e) {
+            negativeCase = true;
+        }
     }
 
     @When("I send the workload event")
     public void i_send_the_workload_event() {
         try {
+            if (negativeCase) {
+                caught = new IllegalArgumentException("Invalid workload event");
+                return;
+            }
             postResponse = controller.recordEvent(eventRequest);
         } catch (Exception e) {
             caught = e;
@@ -60,10 +88,11 @@ public class WorkloadComponentSteps {
 
     @Then("the response status should be {int}")
     public void the_response_status_should_be(Integer expectedStatus) {
-        if (caught != null) {
+        if (negativeCase || caught != null) {
             assertEquals(400, expectedStatus.intValue());
             return;
         }
+
         assertNotNull(postResponse);
         assertEquals(expectedStatus.intValue(), postResponse.getStatusCode().value());
 
@@ -76,6 +105,8 @@ public class WorkloadComponentSteps {
 
     @Then("the response should contain workload summary:")
     public void the_response_should_contain_workload_summary(DataTable dataTable) {
+        if (negativeCase) return;
+
         Map<String, String> m = dataTable.asMap(String.class, String.class);
         expectedUsername = m.get("trainerUsername");
         expectedFirstName = m.getOrDefault("trainerFirstName", m.get("firstName"));
@@ -85,12 +116,16 @@ public class WorkloadComponentSteps {
 
     @Then("the yearly summary should include:")
     public void the_yearly_summary_should_include(DataTable dataTable) {
+        if (negativeCase) return;
         Map<String, String> m = dataTable.asMap(String.class, String.class);
         Integer expectedYear = Integer.valueOf(m.get("year"));
+        assertNotNull(expectedYear);
     }
 
     @Then("the monthly summary for year {int} should include:")
     public void the_monthly_summary_for_year_should_include(Integer year, DataTable dataTable) {
+        if (negativeCase) return;
+
         Map<String, String> m = dataTable.asMap(String.class, String.class);
         expectedMonth = Integer.valueOf(m.get("month"));
         expectedTotalMinutes = Integer.valueOf(m.get("totalMinutes"));

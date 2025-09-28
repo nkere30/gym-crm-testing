@@ -41,3 +41,42 @@ Feature: Workload Service Component Tests
     And the monthly summary for year 2025 should include:
       | month        | 9  |
       | totalMinutes | 0  |
+
+  @negative
+  Scenario: Fail to process workload event with missing trainer username
+    Given a workload event with:
+      | trainerUsername  |            |
+      | firstName        | John       |
+      | lastName         | Doe        |
+      | isActive         | true       |
+      | trainingDate     | 2025-09-01 |
+      | trainingDuration | 60         |
+      | actionType       | ADD        |
+    When I send the workload event
+    Then the response status should be 400
+
+  @negative
+  Scenario: Fail to process workload event with invalid action type
+    Given a workload event with:
+      | trainerUsername  | john.doe   |
+      | firstName        | John       |
+      | lastName         | Doe        |
+      | isActive         | true       |
+      | trainingDate     | 2025-09-01 |
+      | trainingDuration | 60         |
+      | actionType       | INVALID    |
+    When I send the workload event
+    Then the response status should be 400
+
+  @negative
+  Scenario: Fail to process workload event with negative training duration
+    Given a workload event with:
+      | trainerUsername  | john.doe   |
+      | firstName        | John       |
+      | lastName         | Doe        |
+      | isActive         | true       |
+      | trainingDate     | 2025-09-01 |
+      | trainingDuration | -30        |
+      | actionType       | ADD        |
+    When I send the workload event
+    Then the response status should be 400

@@ -14,6 +14,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.UUID;
 
 @Tag(name = "Workloads")
 @RestController
@@ -23,6 +27,8 @@ import org.springframework.web.bind.annotation.*;
 @SecurityRequirement(name = "bearerAuth")
 public class WorkloadController {
 
+    private static final Logger log = LoggerFactory.getLogger(WorkloadController.class);
+
     private final WorkloadService service;
 
     @Operation(
@@ -31,6 +37,8 @@ public class WorkloadController {
     )
     @PostMapping("/events")
     public ResponseEntity<Void> recordEvent(@Valid @RequestBody WorkloadEventRequest request) {
+        String txId = UUID.randomUUID().toString();
+        log.info("Transaction [{}] - Recording workload event for trainer {}", txId, request.getTrainerUsername());
         service.recordEvent(request);
         return ResponseEntity.ok().build();
     }
@@ -44,6 +52,8 @@ public class WorkloadController {
             @PathVariable("trainerUsername") String trainerUsername,
             @RequestParam("year") @Min(2000) @Max(2100) int year,
             @RequestParam("month") @Min(1) @Max(12) int month) {
+        String txId = UUID.randomUUID().toString();
+        log.info("Transaction [{}] - Fetching monthly total for trainer {} ({}-{})", txId, trainerUsername, year, month);
         return service.getMonthlyTotal(trainerUsername, year, month);
     }
 
@@ -54,7 +64,8 @@ public class WorkloadController {
     @GetMapping("/{trainerUsername}/summary")
     public WorkloadSummaryResponse getTrainerSummary(
             @PathVariable("trainerUsername") String trainerUsername) {
+        String txId = UUID.randomUUID().toString();
+        log.info("Transaction [{}] - Fetching workload summary for trainer {}", txId, trainerUsername);
         return service.getTrainerSummary(trainerUsername);
     }
-
 }

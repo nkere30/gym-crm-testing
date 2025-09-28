@@ -111,3 +111,42 @@ Feature: Workload Service Component Tests
       | actionType       | ADD        |
     When I send the workload event
     Then the response status should be 400
+
+  @nfr @auth
+  Scenario: Fail to access workload endpoint without JWT
+    Given a workload event with:
+      | trainerUsername  | john.doe   |
+      | firstName        | John       |
+      | lastName         | Doe        |
+      | isActive         | true       |
+      | trainingDate     | 2025-09-01 |
+      | trainingDuration | 60         |
+      | actionType       | ADD        |
+    When I try to send the workload event without authentication
+    Then the response status should be 401
+
+  @nfr @auth
+  Scenario: Fail to access workload endpoint with wrong role
+    Given a workload event with:
+      | trainerUsername  | john.doe   |
+      | firstName        | John       |
+      | lastName         | Doe        |
+      | isActive         | true       |
+      | trainingDate     | 2025-09-01 |
+      | trainingDuration | 60         |
+      | actionType       | ADD        |
+    When I try to send the workload event with role "TRAINEE"
+    Then the response status should be 403
+
+  @nfr @logging
+  Scenario: TransactionId should be included in workload operations
+    Given a workload event with:
+      | trainerUsername  | john.doe   |
+      | firstName        | John       |
+      | lastName         | Doe        |
+      | isActive         | true       |
+      | trainingDate     | 2025-09-05 |
+      | trainingDuration | 45         |
+      | actionType       | ADD        |
+    When I send the workload event
+    Then the logs should contain a transactionId

@@ -1,7 +1,7 @@
-@component @workload @positive
+@component @workload
 Feature: Workload Service Component Tests
 
-  # Positive: ADD event updates monthly summary
+  @positive
   Scenario: Successfully process ADD workload event
     Given a workload event with:
       | trainerUsername  | john.doe   |
@@ -24,6 +24,7 @@ Feature: Workload Service Component Tests
       | month        | 9  |
       | totalMinutes | 60 |
 
+  @positive
   Scenario: Successfully process DELETE workload event
     Given a workload event with:
       | trainerUsername  | john.doe   |

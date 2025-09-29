@@ -20,6 +20,19 @@
     </properties>
 
     <dependencies>
+        <!-- CRM Service -->
+        <dependency>
+            <groupId>com.gymcrm</groupId>
+            <artifactId>gym-crm-rest</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <!-- Workload Service -->
+        <dependency>
+            <groupId>com.gymcrm</groupId>
+            <artifactId>workload-service</artifactId>
+            <version>${project.version}</version>
+        </dependency>
         <!-- Spring Boot test support -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

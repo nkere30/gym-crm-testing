@@ -10,7 +10,7 @@ spring:
   jms:
     listener:
       auto-startup: false
-      
+
 eureka:
   client:
     enabled: false

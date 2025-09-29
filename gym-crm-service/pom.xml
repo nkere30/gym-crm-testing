@@ -12,7 +12,7 @@
 
 	<groupId>com.gymcrm</groupId>
 	<artifactId>gym-crm-rest</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>1.0.0-SNAPSHOT</version>
 	<name>gym-crm-rest</name>
 	<description>Gym CRM REST API - MJC REST Module</description>
 

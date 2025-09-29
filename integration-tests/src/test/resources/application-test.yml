@@ -1,0 +1,13 @@
+spring:
+  application:
+    name: integration-tests
+
+  data:
+    mongodb:
+      uri: placeholder
+
+  activemq:
+    broker-url: placeholder
+jwt:
+  secret: test-jwt-secret-key
+  issuer: gym-crm-test

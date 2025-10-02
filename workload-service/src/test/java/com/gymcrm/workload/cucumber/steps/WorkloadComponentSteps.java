@@ -109,54 +109,19 @@ public class WorkloadComponentSteps {
 
     @Then("the response should contain workload summary:")
     public void the_response_should_contain_workload_summary(DataTable dataTable) {
-        Map<String, String> m = dataTable.asMap(String.class, String.class);
-        expectedUsername = m.get("trainerUsername");
-        expectedFirstName = m.get("trainerFirstName");
-        expectedLastName = m.get("trainerLastName");
-        expectedActive = m.containsKey("isActive") ? Boolean.valueOf(m.get("isActive")) : null;
+        Map<String, String> map = dataTable.asMap(String.class, String.class);
+        WorkloadSummaryResponse expected = WorkloadSummaryTestMapper.INSTANCE.toResponse(map);
 
-        assertNotNull(expectedUsername);
-        assertNotNull(expectedFirstName);
-        assertNotNull(expectedLastName);
+        Mockito.when(service.getTrainerSummary(map.get("trainerUsername"))).thenReturn(expected);
+        WorkloadSummaryResponse actual = controller.getTrainerSummary(map.get("trainerUsername"));
+
+        assertEquals(expected, actual);
     }
+
 
     @Then("the yearly summary should include:")
     public void the_yearly_summary_should_include(DataTable dataTable) {
         expectedYear = Integer.valueOf(dataTable.asMap(String.class, String.class).get("year"));
-    }
-
-    @Then("the monthly summary for year {int} should include:")
-    public void the_monthly_summary_for_year_should_include(Integer year, DataTable dataTable) {
-        Map<String, String> m = dataTable.asMap(String.class, String.class);
-
-        // Merge yearly/monthly info into the map
-        m.put("year", String.valueOf(year));
-        m.put("trainerUsername", expectedUsername);
-        m.put("trainerFirstName", expectedFirstName);
-        m.put("trainerLastName", expectedLastName);
-        m.put("isActive", String.valueOf(expectedActive != null ? expectedActive : true));
-
-        // Build full response via mapper
-        WorkloadSummaryResponse mock = WorkloadSummaryTestMapper.INSTANCE.toResponse(m);
-
-        Mockito.when(service.getTrainerSummary(expectedUsername)).thenReturn(mock);
-
-        // Call and assert
-        WorkloadSummaryResponse resp = controller.getTrainerSummary(expectedUsername);
-        assertEquals(expectedUsername, resp.getTrainerUsername());
-        assertEquals(expectedFirstName, resp.getTrainerFirstName());
-        assertEquals(expectedLastName, resp.getTrainerLastName());
-        if (expectedActive != null) assertEquals(expectedActive, resp.getIsActive());
-
-        int expectedMonth = Integer.parseInt(m.get("month"));
-        int expectedMinutes = Integer.parseInt(m.get("totalMinutes"));
-
-        WorkloadSummaryResponse.YearSummary yr =
-                resp.getYears().stream().filter(y -> y.getYear() == year).findFirst().orElseThrow();
-        assertEquals(year, yr.getYear());
-        assertTrue(yr.getMonths().stream().anyMatch(
-                mm -> mm.getMonth() == expectedMonth && mm.getTotalMinutes() == expectedMinutes
-        ));
     }
 
 

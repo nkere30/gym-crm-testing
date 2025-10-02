@@ -9,6 +9,8 @@ import com.gymcrm.workload.dto.WorkloadActionType;
 import com.gymcrm.workload.service.WorkloadService;
 import io.cucumber.datatable.DataTable;
 import io.cucumber.java.en.*;
+import jakarta.validation.Validation;
+import jakarta.validation.Validator;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.springframework.http.ResponseEntity;
@@ -37,47 +39,47 @@ public class WorkloadComponentSteps {
     private Boolean expectedActive;
     private Integer expectedMonth;
     private Integer expectedTotalMinutes;
-    private WorkloadActionType expectedActionType;
     private Integer expectedYear;
+    private WorkloadActionType expectedActionType;
 
     private ListAppender<ILoggingEvent> listAppender;
+    private final Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
+
 
     // GIVEN
     @Given("a workload event with:")
     public void a_workload_event_with(DataTable dataTable) {
         Map<String, String> map = dataTable.asMap(String.class, String.class);
+        eventRequest = new WorkloadEventRequest();
+        eventRequest.setTrainerUsername(map.get("trainerUsername"));
+        eventRequest.setTrainerFirstName(map.getOrDefault("trainerFirstName", map.get("firstName")));
+        eventRequest.setTrainerLastName(map.getOrDefault("trainerLastName", map.get("lastName")));
+        eventRequest.setIsActive(Boolean.valueOf(map.get("isActive")));
+        eventRequest.setTrainingDate(LocalDate.parse(map.get("trainingDate")));
+        eventRequest.setTrainingDuration(Long.valueOf(map.get("trainingDuration")));
+
+        String actionTypeStr = map.get("actionType");
         try {
-            eventRequest = new WorkloadEventRequest();
-            eventRequest.setTrainerUsername(map.get("trainerUsername"));
-            eventRequest.setTrainerFirstName(map.getOrDefault("trainerFirstName", map.get("firstName")));
-            eventRequest.setTrainerLastName(map.getOrDefault("trainerLastName", map.get("lastName")));
-            eventRequest.setIsActive(Boolean.valueOf(map.get("isActive")));
-            eventRequest.setTrainingDate(LocalDate.parse(map.get("trainingDate")));
-            eventRequest.setTrainingDuration(Long.valueOf(map.get("trainingDuration")));
-            eventRequest.setActionType(WorkloadActionType.valueOf(map.get("actionType")));
+            eventRequest.setActionType(WorkloadActionType.valueOf(actionTypeStr));
             expectedActionType = eventRequest.getActionType();
-        } catch (Exception e) {
+        } catch (IllegalArgumentException e) {
+            eventRequest.setActionType(null);
             caught = e;
         }
     }
 
+
     // WHEN
     @When("I send the workload event")
     public void i_send_the_workload_event() {
+        var violations = validator.validate(eventRequest);
+        if (!violations.isEmpty()) {
+            postResponse = ResponseEntity.badRequest().build();
+            return;
+        }
+        attachLogAppender();
         try {
-            if (eventRequest.getTrainerUsername() == null || eventRequest.getTrainerUsername().isBlank()) {
-                throw new IllegalArgumentException("Trainer username is required");
-            }
-            if (eventRequest.getTrainingDuration() == null || eventRequest.getTrainingDuration() <= 0) {
-                throw new IllegalArgumentException("Training duration must be positive");
-            }
-            if (eventRequest.getActionType() == null) {
-                throw new IllegalArgumentException("Action type is required");
-            }
-
-            attachLogAppender();
             postResponse = controller.recordEvent(eventRequest);
-
         } catch (Exception e) {
             caught = e;
         }
@@ -94,25 +96,31 @@ public class WorkloadComponentSteps {
     }
 
     // THEN
-    @Then("the response status should be {int}")
-    public void the_response_status_should_be(Integer expectedStatus) {
-        if (caught != null) {
-            if (caught instanceof SecurityException) {
-                int mappedStatus = caught.getMessage().contains("Forbidden") ? 403 : 401;
-                assertEquals(expectedStatus.intValue(), mappedStatus);
-                return;
-            }
-            assertEquals(400, expectedStatus.intValue(), "Expected validation failure to map to 400");
-            return;
-        }
+    @Then("the workload event response status should be {int}")
+    public void workload_event_status_should_be(int expectedStatus) {
         assertNotNull(postResponse);
-        assertEquals(expectedStatus.intValue(), postResponse.getStatusCode().value());
+        assertEquals(expectedStatus, postResponse.getStatusCode().value());
 
         ArgumentCaptor<WorkloadEventRequest> captor = ArgumentCaptor.forClass(WorkloadEventRequest.class);
         Mockito.verify(service, Mockito.times(1)).recordEvent(captor.capture());
         WorkloadEventRequest captured = captor.getValue();
         assertEquals(expectedActionType, captured.getActionType());
         assertEquals(eventRequest.getTrainerUsername(), captured.getTrainerUsername());
+    }
+
+    @Then("the workload event validation response status should be {int}")
+    public void workload_event_validation_status_should_be(int expectedStatus) {
+        assertNotNull(postResponse, "Expected a response entity");
+        assertEquals(expectedStatus, postResponse.getStatusCode().value());
+    }
+
+
+    @Then("the workload event authentication response status should be {int}")
+    public void workload_event_auth_status_should_be(int expectedStatus) {
+        assertNotNull(caught);
+        assertInstanceOf(SecurityException.class, caught);
+        int mappedStatus = caught.getMessage().contains("Forbidden") ? 403 : 401;
+        assertEquals(expectedStatus, mappedStatus);
     }
 
     @Then("the response should contain workload summary:")
@@ -123,9 +131,9 @@ public class WorkloadComponentSteps {
         expectedLastName = m.getOrDefault("trainerLastName", m.get("lastName"));
         expectedActive = m.containsKey("isActive") ? Boolean.valueOf(m.get("isActive")) : null;
 
-        assertNotNull(expectedUsername, "Trainer username must be provided in summary");
-        assertNotNull(expectedFirstName, "Trainer first name must be provided in summary");
-        assertNotNull(expectedLastName, "Trainer last name must be provided in summary");
+        assertNotNull(expectedUsername);
+        assertNotNull(expectedFirstName);
+        assertNotNull(expectedLastName);
     }
 
     @Then("the yearly summary should include:")
@@ -164,8 +172,10 @@ public class WorkloadComponentSteps {
         assertEquals(expectedLastName, resp.getTrainerLastName());
         if (expectedActive != null) assertEquals(expectedActive, resp.getIsActive());
 
-        YearSummary yr = resp.getYears().stream().filter(y -> y.getYear() == year).findFirst().orElseThrow();
-        assertEquals(expectedYear, yr.getYear(), "Expected year should match");
+        YearSummary yr = resp.getYears().stream()
+                .filter(y -> y.getYear() == year)
+                .findFirst().orElseThrow();
+        assertEquals(expectedYear, yr.getYear());
         assertTrue(yr.getMonths().stream().anyMatch(mm ->
                 mm.getMonth() == expectedMonth && mm.getTotalMinutes() == expectedTotalMinutes));
     }
@@ -174,9 +184,8 @@ public class WorkloadComponentSteps {
     public void the_logs_should_contain_a_transaction_id() {
         List<ILoggingEvent> logsList = listAppender.list;
         boolean containsTx = logsList.stream()
-                .anyMatch(event -> event.getFormattedMessage()
-                        .matches(".*\\[[0-9a-f\\-]{36}].*"));
-        assertTrue(containsTx, "Expected logs to contain a transactionId in UUID format");
+                .anyMatch(event -> event.getFormattedMessage().matches(".*\\[[0-9a-f\\-]{36}].*"));
+        assertTrue(containsTx);
     }
 
     private void attachLogAppender() {

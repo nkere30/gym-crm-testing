@@ -12,7 +12,7 @@ Feature: Workload Service Component Tests
       | trainingDuration | 60         |
       | actionType       | ADD        |
     When I send the workload event
-    Then the response status should be 200
+    Then the workload event response status should be 200
     And the response should contain workload summary:
       | trainerUsername   | john.doe |
       | trainerFirstName  | John     |
@@ -35,7 +35,7 @@ Feature: Workload Service Component Tests
       | trainingDuration | 60         |
       | actionType       | DELETE     |
     When I send the workload event
-    Then the response status should be 200
+    Then the workload event response status should be 200
     And the yearly summary should include:
       | year | 2025 |
     And the monthly summary for year 2025 should include:
@@ -53,7 +53,7 @@ Feature: Workload Service Component Tests
       | trainingDuration | 60         |
       | actionType       | ADD        |
     When I send the workload event
-    Then the response status should be 400
+    Then the workload event validation response status should be 400
 
   @negative
   Scenario: Fail to process workload event with invalid action type
@@ -66,7 +66,7 @@ Feature: Workload Service Component Tests
       | trainingDuration | 60         |
       | actionType       | INVALID    |
     When I send the workload event
-    Then the response status should be 400
+    Then the workload event validation response status should be 400
 
   @negative
   Scenario: Fail to process workload event with negative training duration
@@ -79,7 +79,7 @@ Feature: Workload Service Component Tests
       | trainingDuration | -30        |
       | actionType       | ADD        |
     When I send the workload event
-    Then the response status should be 400
+    Then the workload event validation response status should be 400
 
   @edge
   Scenario: Process workload event on leap day
@@ -92,7 +92,7 @@ Feature: Workload Service Component Tests
       | trainingDuration | 45         |
       | actionType       | ADD        |
     When I send the workload event
-    Then the response status should be 200
+    Then the workload event response status should be 200
     And the yearly summary should include:
       | year | 2024 |
     And the monthly summary for year 2024 should include:
@@ -110,7 +110,7 @@ Feature: Workload Service Component Tests
       | trainingDuration | 0          |
       | actionType       | ADD        |
     When I send the workload event
-    Then the response status should be 400
+    Then the workload event validation response status should be 400
 
   @nfr @auth
   Scenario: Fail to access workload endpoint without JWT
@@ -123,7 +123,7 @@ Feature: Workload Service Component Tests
       | trainingDuration | 60         |
       | actionType       | ADD        |
     When I try to send the workload event without authentication
-    Then the response status should be 401
+    Then the workload event authentication response status should be 401
 
   @nfr @auth
   Scenario: Fail to access workload endpoint with wrong role
@@ -136,7 +136,7 @@ Feature: Workload Service Component Tests
       | trainingDuration | 60         |
       | actionType       | ADD        |
     When I try to send the workload event with role "TRAINEE"
-    Then the response status should be 403
+    Then the workload event authentication response status should be 403
 
   @nfr @logging
   Scenario: TransactionId should be included in workload operations

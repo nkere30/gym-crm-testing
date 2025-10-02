@@ -10,14 +10,14 @@ Feature: Training Component Tests
       | trainingDate     | 2025-09-01   |
       | trainingDuration | 60           |
     When I create the training
-    Then the training creation response status should be 201
+    Then the training creation should succeed with status 201
     And the response should contain the training details
 
   @positive
   Scenario: Successfully delete a training
     Given an existing training with id 1
     When I delete the training with id 1
-    Then the training deletion response status should be 200
+    Then the training deletion should succeed with status 200
 
   @negative
   Scenario: Fail to create a training with missing trainer username
@@ -28,13 +28,13 @@ Feature: Training Component Tests
       | trainingDate     | 2025-09-01   |
       | trainingDuration | 60           |
     When I create the training
-    Then the training creation response status should be 400
+    Then the training creation should fail with status 400
 
   @negative
   Scenario: Fail to delete a non-existent training
     Given no training exists with id 999
     When I delete the training with id 999
-    Then the training deletion response status should be 404
+    Then the training deletion should fail with status 404
 
   @edgecase
   Scenario: Create training with apostrophe and hyphen in name
@@ -45,7 +45,7 @@ Feature: Training Component Tests
       | trainingDate     | 2025-09-01     |
       | trainingDuration | 90             |
     When I create the training
-    Then the training creation response status should be 201
+    Then the training creation should succeed with status 201
     And the response should contain the training details
 
   @edgecase @negative
@@ -57,7 +57,7 @@ Feature: Training Component Tests
       | trainingDate     | 2025-09-01   |
       | trainingDuration | 45           |
     When I create the training
-    Then the training creation response status should be 400
+    Then the training creation should fail with status 400
 
   @edgecase @training
   Scenario: Fail to create a training with zero duration
@@ -68,7 +68,7 @@ Feature: Training Component Tests
       | trainingDate     | 2025-09-01   |
       | trainingDuration | 0            |
     When I create the training
-    Then the training creation response status should be 400
+    Then the training creation should fail with status 400
 
   @edgecase @nfr
   Scenario: TransactionId should be included in training operations

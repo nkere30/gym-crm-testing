@@ -8,8 +8,8 @@ import java.time.LocalDate;
 import java.util.Map;
 
 @Mapper(imports = {LocalDate.class})
-public interface TrainingTestMapper {
-    TrainingTestMapper INSTANCE = Mappers.getMapper(TrainingTestMapper.class);
+public interface TrainingRequestTestMapper {
+    TrainingRequestTestMapper  INSTANCE = Mappers.getMapper(TrainingRequestTestMapper.class);
 
     TrainingCreateRequest toRequest(Map<String, String> data);
 }

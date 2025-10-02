@@ -86,12 +86,9 @@ public class WorkloadComponentSteps {
         assertNotNull(postResponse);
         assertEquals(expectedStatus, postResponse.getStatusCode().value());
 
-        ArgumentCaptor<WorkloadEventRequest> captor = ArgumentCaptor.forClass(WorkloadEventRequest.class);
-        Mockito.verify(service, Mockito.times(1)).recordEvent(captor.capture());
-        WorkloadEventRequest captured = captor.getValue();
-        assertEquals(expectedActionType, captured.getActionType());
-        assertEquals(eventRequest.getTrainerUsername(), captured.getTrainerUsername());
+        Mockito.verify(service, Mockito.times(1)).recordEvent(eventRequest);
     }
+
 
     @Then("the workload event validation response status should be {int}")
     public void workload_event_validation_status_should_be(int expectedStatus) {

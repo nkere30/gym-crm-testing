@@ -2,18 +2,14 @@ package com.gymcrm.workload.cucumber.steps;
 
 import com.gymcrm.workload.controller.WorkloadController;
 import com.gymcrm.workload.cucumber.mapper.WorkloadSummaryTestMapper;
+import com.gymcrm.workload.cucumber.mapper.WorkloadTestMapper;
 import com.gymcrm.workload.dto.WorkloadEventRequest;
 import com.gymcrm.workload.dto.WorkloadSummaryResponse;
-import com.gymcrm.workload.dto.WorkloadSummaryResponse.YearSummary;
-import com.gymcrm.workload.dto.WorkloadSummaryResponse.MonthSummary;
-import com.gymcrm.workload.dto.WorkloadActionType;
 import com.gymcrm.workload.service.WorkloadService;
-import com.gymcrm.workload.cucumber.mapper.WorkloadTestMapper;
 import io.cucumber.datatable.DataTable;
 import io.cucumber.java.en.*;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.springframework.http.ResponseEntity;
 import ch.qos.logback.classic.Logger;
@@ -21,7 +17,8 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -34,16 +31,6 @@ public class WorkloadComponentSteps {
     private WorkloadEventRequest eventRequest;
     private ResponseEntity<Void> postResponse;
     private Exception caught;
-
-    private String expectedUsername;
-    private String expectedFirstName;
-    private String expectedLastName;
-    private Boolean expectedActive;
-    private Integer expectedMonth;
-    private Integer expectedTotalMinutes;
-    private Integer expectedYear;
-    private WorkloadActionType expectedActionType;
-
     private ListAppender<ILoggingEvent> listAppender;
 
     // GIVEN
@@ -51,7 +38,6 @@ public class WorkloadComponentSteps {
     public void a_workload_event_with(DataTable dataTable) {
         Map<String, String> map = dataTable.asMap(String.class, String.class);
         eventRequest = WorkloadTestMapper.INSTANCE.toRequest(map);
-        expectedActionType = eventRequest.getActionType();
     }
 
     // WHEN
@@ -85,10 +71,8 @@ public class WorkloadComponentSteps {
     public void workload_event_status_should_be(int expectedStatus) {
         assertNotNull(postResponse);
         assertEquals(expectedStatus, postResponse.getStatusCode().value());
-
         Mockito.verify(service, Mockito.times(1)).recordEvent(eventRequest);
     }
-
 
     @Then("the workload event validation response status should be {int}")
     public void workload_event_validation_status_should_be(int expectedStatus) {
@@ -115,12 +99,13 @@ public class WorkloadComponentSteps {
         assertEquals(expected, actual);
     }
 
-
     @Then("the yearly summary should include:")
     public void the_yearly_summary_should_include(DataTable dataTable) {
-        expectedYear = Integer.valueOf(dataTable.asMap(String.class, String.class).get("year"));
-    }
+        String year = dataTable.asMap(String.class, String.class).get("year");
 
+        WorkloadSummaryResponse resp = controller.getTrainerSummary(eventRequest.getTrainerUsername());
+        assertTrue(resp.getYears().stream().anyMatch(y -> y.getYear() == Integer.parseInt(year)));
+    }
 
     @Then("the logs should contain a transactionId")
     public void the_logs_should_contain_a_transaction_id() {

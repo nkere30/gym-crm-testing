@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
 @Component
@@ -22,7 +23,14 @@ public class JwtTestUtil {
 
     @PostConstruct
     private void init() {
-        this.secretKey = Keys.hmacShaKeyFor(secret.getBytes());
+        byte[] keyBytes = secret.getBytes(StandardCharsets.UTF_8);
+        if (keyBytes.length < 32) {
+            throw new IllegalArgumentException(
+                    "JWT secret key must be at least 32 characters for HS256. " +
+                            "Current length: " + keyBytes.length
+            );
+        }
+        this.secretKey = Keys.hmacShaKeyFor(keyBytes);
     }
 
     public String generateToken(String username) {

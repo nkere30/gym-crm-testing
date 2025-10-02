@@ -19,6 +19,8 @@
     <java.version>17</java.version>
     <springdoc.version>2.5.0</springdoc.version>
     <jjwt.version>0.11.5</jjwt.version>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
   </properties>
 
   <dependencies>
@@ -142,7 +144,16 @@
       <plugin>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
+        <version>3.3.13</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>repackage</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
+
       <!-- Java 17 -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -150,7 +161,9 @@
         <version>3.13.0</version>
         <configuration>
           <release>17</release>
-          <compilerArgs><arg>-parameters</arg></compilerArgs>
+          <compilerArgs>
+            <arg>-parameters</arg>
+          </compilerArgs>
           <annotationProcessorPaths>
             <path>
               <groupId>org.projectlombok</groupId>

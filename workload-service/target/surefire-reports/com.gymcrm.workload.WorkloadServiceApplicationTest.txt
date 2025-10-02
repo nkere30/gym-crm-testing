@@ -1,4 +1,4 @@
 -------------------------------------------------------------------------------
 Test set: com.gymcrm.workload.WorkloadServiceApplicationTest
 -------------------------------------------------------------------------------
-Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 2.753 s -- in com.gymcrm.workload.WorkloadServiceApplicationTest
+Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 2.380 s -- in com.gymcrm.workload.WorkloadServiceApplicationTest

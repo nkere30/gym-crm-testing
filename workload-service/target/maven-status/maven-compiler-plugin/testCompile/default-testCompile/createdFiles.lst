@@ -1,10 +1,13 @@
 com\gymcrm\workload\repository\WorkloadSummaryRepositoryTest.class
-com\gymcrm\workload\controller\WorkloadControllerTest.class
-com\gymcrm\workload\dto\WorkloadDtoTest.class
 com\gymcrm\workload\repository\WorkloadEventRepositoryTest.class
-com\gymcrm\workload\security\JwtVerificationFilterTest.class
-com\gymcrm\workload\WorkloadServiceApplicationTest.class
 com\gymcrm\workload\messaging\WorkloadEventsConsumerTest.class
 com\gymcrm\workload\config\OpenApiConfigTest.class
+com\gymcrm\workload\controller\WorkloadControllerTest.class
+com\gymcrm\workload\dto\WorkloadDtoTest.class
+com\gymcrm\workload\security\JwtVerificationFilterTest.class
+com\gymcrm\workload\WorkloadServiceApplicationTest.class
+com\gymcrm\workload\cucumber\CucumberSpringConfiguration.class
+com\gymcrm\workload\cucumber\RunCucumberTest.class
+com\gymcrm\workload\cucumber\steps\WorkloadComponentSteps.class
 com\gymcrm\workload\security\JwtServiceTest.class
 com\gymcrm\workload\service\WorkloadServiceImplTest.class

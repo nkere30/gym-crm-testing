@@ -10,9 +10,9 @@ Feature: User Component Tests
       | dateOfBirth    | 2000-01-01  |
       | address        | 123 Main St |
     When I register the <user>
-    Then the registration response status should be 201
-    And the response should contain a username
-    And the response should contain a password
+    Then the <user> registration response status should be 201
+    And the <user> response should contain a username
+    And the <user> response should contain a password
 
     Examples:
       | user    |
@@ -27,7 +27,7 @@ Feature: User Component Tests
       | dateOfBirth    | 2000-01-01  |
       | address        | Main St     |
     When I register the <user>
-    Then the registration response status should be 400
+    Then the <user> registration response status should be 400
 
     Examples:
       | user    |
@@ -37,9 +37,9 @@ Feature: User Component Tests
   @positive
   Scenario Outline: Successfully login as <user>
     Given a <user> exists with username "user.name" and password "pass"
-    When I login as <user> with username "user.name" and password "pass"
-    Then the login response status should be 200
-    And the response should contain a valid JWT token
+    When I login as <user> with correct credentials
+    Then the <user> login response status should be 200
+    And the <user> response should contain a valid JWT token
 
     Examples:
       | user    |
@@ -49,8 +49,8 @@ Feature: User Component Tests
   @negative
   Scenario Outline: Login fails with invalid credentials for <user>
     Given a <user> exists with username "user.name" and password "correctPass"
-    When I login as <user> with username "user.name" and password "wrongPass"
-    Then the login response status should be 401
+    When I login as <user> with invalid credentials
+    Then the <user> login response status should be 401
 
     Examples:
       | user    |
@@ -66,9 +66,9 @@ Feature: User Component Tests
       | dateOfBirth    | 1990-05-15  |
       | address        | 45 Elm St   |
     When I register the <user>
-    Then the registration response status should be 201
-    And the response should contain a username
-    And the response should contain a password
+    Then the <user> registration response status should be 201
+    And the <user> response should contain a username
+    And the <user> response should contain a password
 
     Examples:
       | user    |
@@ -84,12 +84,13 @@ Feature: User Component Tests
       | dateOfBirth    | 1995-02-20  |
       | address        | 99 River Rd |
     When I register the <user>
-    Then the registration response status should be 400
+    Then the <user> registration response status should be 400
 
     Examples:
       | user    |
       | trainee |
       | trainer |
+
   @negative @auth @nfr
   Scenario Outline: Fail to register a new <user> without JWT
     Given a <user> registration request:
@@ -99,7 +100,7 @@ Feature: User Component Tests
       | dateOfBirth    | 2000-01-01  |
       | address        | 123 Main St |
     When I try to register the <user> without authentication
-    Then the registration response status should be 401
+    Then the <user> registration response status should be 401
 
     Examples:
       | user    |

@@ -18,9 +18,9 @@
           <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.30/lombok-1.18.30.jar" />
           <entry name="$MAVEN_REPOSITORY$/org/springframework/boot/spring-boot-configuration-processor/3.3.13/spring-boot-configuration-processor-3.3.13.jar" />
           <entry name="$MAVEN_REPOSITORY$/org/mapstruct/mapstruct-processor/1.5.5.Final/mapstruct-processor-1.5.5.Final.jar" />
-          <entry name="$MAVEN_REPOSITORY$/org/mapstruct/mapstruct/1.5.5.Final/mapstruct-1.5.5.Final.jar" />
         </processorPath>
         <module name="gym-crm-rest" />
+        <module name="workload-service" />
       </profile>
     </annotationProcessing>
   </component>

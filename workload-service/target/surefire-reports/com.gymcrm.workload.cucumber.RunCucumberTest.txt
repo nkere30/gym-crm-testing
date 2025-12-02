@@ -1,4 +1,0 @@
--------------------------------------------------------------------------------
-Test set: com.gymcrm.workload.cucumber.RunCucumberTest
--------------------------------------------------------------------------------
-Tests run: 10, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.882 s -- in com.gymcrm.workload.cucumber.RunCucumberTest

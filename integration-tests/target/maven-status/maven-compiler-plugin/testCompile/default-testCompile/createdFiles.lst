@@ -1,0 +1,5 @@
+com\gymcrm\cucumber\RunIntegrationCucumberIT.class
+com\gymcrm\cucumber\CucumberSpringConfiguration.class
+com\gymcrm\util\JwtTestUtil.class
+com\gymcrm\config\TestContainersConfig$Initializer.class
+com\gymcrm\config\TestContainersConfig.class

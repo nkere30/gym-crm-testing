@@ -33,12 +33,17 @@ public class AuthenticationService {
         }
 
         loginAttemptService.loginSucceeded(username);
-        var userDetails = userDetailsService.loadUserByUsername(username);
+
+        org.springframework.security.core.userdetails.UserDetails userDetails =
+                userDetailsService.loadUserByUsername(username);
+
         return jwtService.generateToken(userDetails);
     }
 
     public void authenticate(String username, String password) {
-        var authToken = new UsernamePasswordAuthenticationToken(username, password);
+        UsernamePasswordAuthenticationToken authToken =
+                new UsernamePasswordAuthenticationToken(username, password);
+
         authenticationManager.authenticate(authToken);
     }
 }
